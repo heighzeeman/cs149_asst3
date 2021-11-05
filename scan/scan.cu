@@ -236,9 +236,9 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	set_flags<<<num_blocks, threads_per_block>>>(device_input, device_flags, length);
 	//c_e(cudaDeviceSynchronize());
 	c_e(cudaMemcpy(device_input, device_flags, length*sizeof(int), cudaMemcpyDeviceToDevice));
-	c_e(cudaDeviceSynchronize());
+	//c_e(cudaDeviceSynchronize());
 	exclusive_scan(device_input, length, device_input);
-	c_e(cudaDeviceSynchronize());
+	//c_e(cudaDeviceSynchronize());
 	write_idx<<<num_blocks, threads_per_block>>>(device_flags, device_input, device_output, length);
 	//c_e(cudaDeviceSynchronize());
 	c_e(cudaFree(device_flags));
