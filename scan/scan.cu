@@ -56,10 +56,14 @@ __global__ void upsweep(int two_d, int N, int* output) {
 __global__ void downsweep(int two_d, int N, int* output) {
 	int two_dplus1 = two_d * 2;
 	int i = (blockIdx.x * blockDim.x + threadIdx.x) * two_dplus1;
-	if (i + two_dplus1 == N) output[N-1] = 0;
+	if (i + two_dplus1 == N) {
+		printf("Thread id = %d, output[%d-1] = 0\n", i / two_dplus1, N);
+		output[N-1] = 0;
+	}
 	__syncthreads();
 	
 	if (i + two_dplus1 <= N) {
+		printf("Thread id = %d, two_d = %d, output[%d] = output[%d]\n", i / two_dplus1, two_d, i + two_d - 1, i + two_dplus1 - 1);
 		int t = output[i+two_d-1];
         output[i+two_d-1] = output[i+two_dplus1-1];
         output[i+two_dplus1-1] += t;
@@ -90,6 +94,7 @@ void exclusive_scan(int* input, int N, int* result)
     for (int two_d = N/2; two_d >= 1; two_d /= 2) {
 		int two_dplus1 = 2 * two_d;
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
+		printf("Downsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		downsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
 		cudaDeviceSynchronize();
     }
