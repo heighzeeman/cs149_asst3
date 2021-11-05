@@ -87,7 +87,7 @@ void exclusive_scan(int* input, int N, int* result)
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
 		dprintf("Upsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		upsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
-		cudaDeviceSynchronize();
+		//cudaDeviceSynchronize();
     }
 	
 	cudaMemset(&result[N-1], 0, sizeof(int));
@@ -98,7 +98,7 @@ void exclusive_scan(int* input, int N, int* result)
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
 		dprintf("Downsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		downsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
-		cudaDeviceSynchronize();
+		//cudaDeviceSynchronize();
     }
 }
 
