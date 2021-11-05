@@ -14,7 +14,7 @@
 
 #define THREADS_PER_BLOCK 256
 
-#define _DEBUGGING
+//#define _DEBUGGING
 #ifdef _DEBUGGING
 #define dprintf(str, ...) printf(str, __VA_ARGS__)
 #define c_e(ans) { cudaAssert((ans), __FILE__, __LINE__); }
@@ -107,7 +107,7 @@ void exclusive_scan(int* input, int N, int* result)
 		dim3 num_blocks(((N / two_dplus1) + threads_per_block - 1)/threads_per_block);
 		dprintf("Upsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		upsweep<<<num_blocks, threads_per_block>>>(two_d, N, result);
-		c_e(cudaDeviceSynchronize());
+		//c_e(cudaDeviceSynchronize());
     }
 	
 	cudaMemset(&result[N-1], 0, sizeof(int));
