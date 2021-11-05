@@ -14,6 +14,7 @@
 
 #define THREADS_PER_BLOCK 256
 
+#define _DEBUGGING
 #ifdef _DEBUGGING
 #define dprintf(EXPR, ...) printf(EXPR, ...);
 #else
@@ -80,7 +81,7 @@ void exclusive_scan(int* input, int N, int* result)
     // on the CPU.  Your implementation will need to make multiple calls
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
-	printf("Orig N = %d\n", N);
+	dprintf("Orig N = %d\n", N);
 	N = nextPow2(N);
 	for (int two_d = 1; two_d <= N/2; two_d*=2) {
 		int two_dplus1 = 2 * two_d;
