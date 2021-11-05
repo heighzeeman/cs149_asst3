@@ -76,7 +76,7 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
 	printf("Orig N = %d\n", N);
-	N = nextPow2(N) / 2;
+	N = nextPow2(N);
 	for (int two_d = 1; two_d <= N/2; two_d*=2) {
 		int two_dplus1 = 2 * two_d;
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
