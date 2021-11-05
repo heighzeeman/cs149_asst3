@@ -119,7 +119,6 @@ void exclusive_scan(int* input, int N, int* result)
 		dim3 num_blocks(((N / two_dplus1) + threads_per_block - 1)/threads_per_block);
 		dprintf("Downsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		downsweep<<<num_blocks, threads_per_block>>>(two_d, N, result);
-		//cudaDeviceSynchronize();
     }
 }
 
@@ -207,6 +206,22 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 }
 
 
+__global__ void set_flags(int* device_input, int* device_flags, int length) {
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	if (id < length - 1) {
+		device_flags[id] = (device_input[id] == device_input[id + 1]) ? 1 : 0;
+	} else if (id == length - 1) {
+		device_flags[id] = 0;
+	}
+}
+
+__global__ void write_idx(int* device_flags, int* device_scans, int* device_output, int length) {
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	if (id < length && device_flags[id] == 1) {
+		device_output[device_scans[id]] = id;
+	}
+}
+
 // find_repeats --
 //
 // Given an array of integers `device_input`, returns an array of all
@@ -214,22 +229,32 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 //
 // Returns the total number of pairs found
 int find_repeats(int* device_input, int length, int* device_output) {
-
-    // CS149 TODO:
-    //
-    // Implement this function. You will probably want to
-    // make use of one or more calls to exclusive_scan(), as well as
-    // additional CUDA kernel launches.
-    //    
-    // Note: As in the scan code, the calling code ensures that
-    // allocated arrays are a power of 2 in size, so you can use your
-    // exclusive_scan function with them. However, your implementation
-    // must ensure that the results of find_repeats are correct given
-    // the actual array length.
-
-    return 0; 
+	int* device_flags;
+	c_e(cudaMalloc(&device_flags, sizeof(int)*length));
+	int threads_per_block = (length < THREADS_PER_BLOCK) ? length : THREADS_PER_BLOCK;
+	dim3 num_blocks((length + threads_per_block - 1)/threads_per_block);
+	set_flags<<<num_blocks, threads_per_block>>>(device_input, device_flags, length);
+	c_e(cudaDeviceSynchronize());
+	c_e(cudaMemcpy(device_input, device_flags, length*sizeof(int), cudaMemcpyDeviceToDevice));
+	c_e(cudaDeviceSynchronize());
+	exclusive_scan(device_input, length, device_input);
+	c_e(cudaDeviceSynchronize());
+	write_idx<<<num_blocks, threads_per_block>>>(device_flags, device_input, device_output, length);
+	c_e(cudaDeviceSynchronize());
+	c_e(cudaFree(device_flags));
+	int result;
+	cudaMemcpy(&result, &device_input[length - 1], sizeof(int), cudaMemcpyDeviceToHost);
+	
+    return result; 
 }
 
+/*
+{0, 1, 1, 2, 2, 2, 5, 7, 9, 9}
+{0, 1, 0, 1, 1, 0, 0, 0, 1, 0} ->
+{0, 0, 1, 1, 2, 3, 3, 3, 3, 4}
+
+{1, 3, 4, 8}
+*/
 
 //
 // cudaFindRepeats --
