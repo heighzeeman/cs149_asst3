@@ -48,7 +48,8 @@ __global__ void upsweep(int two_d, int N, int* output) {
 	int two_dplus1 = two_d * 2;
 	int i = (blockIdx.x * blockDim.x + threadIdx.x) * two_dplus1;
 	if (i + two_dplus1 <= N) {
-		printf("Thread id = %d, two_d = %d, output[%d] = output[%d]\n", i / two_dplus1, two_d, i + two_dplus1 - 1, i + two_d - 1);
+		if (i == 0)
+			printf("Thread id = %d, two_d = %d, output[%d] = output[%d]\n", i / two_dplus1, two_d, i + two_dplus1 - 1, i + two_d - 1);
 		output[i + two_dplus1 - 1] += output[i + two_d - 1];
 	}
 }
