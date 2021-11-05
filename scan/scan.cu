@@ -234,13 +234,13 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	int threads_per_block = (length < THREADS_PER_BLOCK) ? length : THREADS_PER_BLOCK;
 	dim3 num_blocks((length + threads_per_block - 1)/threads_per_block);
 	set_flags<<<num_blocks, threads_per_block>>>(device_input, device_flags, length);
-	c_e(cudaDeviceSynchronize());
+	//c_e(cudaDeviceSynchronize());
 	c_e(cudaMemcpy(device_input, device_flags, length*sizeof(int), cudaMemcpyDeviceToDevice));
 	c_e(cudaDeviceSynchronize());
 	exclusive_scan(device_input, length, device_input);
 	c_e(cudaDeviceSynchronize());
 	write_idx<<<num_blocks, threads_per_block>>>(device_flags, device_input, device_output, length);
-	c_e(cudaDeviceSynchronize());
+	//c_e(cudaDeviceSynchronize());
 	c_e(cudaFree(device_flags));
 	int result;
 	cudaMemcpy(&result, &device_input[length - 1], sizeof(int), cudaMemcpyDeviceToHost);
@@ -261,7 +261,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
 //
 // Timing wrapper around find_repeats. You should not modify this function.
 double cudaFindRepeats(int *input, int length, int *output, int *output_length) {
-
     int *device_input;
     int *device_output;
     int rounded_length = nextPow2(length);
