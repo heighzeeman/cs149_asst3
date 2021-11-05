@@ -16,9 +16,9 @@
 
 #define _DEBUGGING
 #ifdef _DEBUGGING
-#define dprintf(EXPR, ...) printf(EXPR, ...);
+#define dprintf(str, ...); printf(#str, ##__VA_ARGS__);
 #else
-#define dprintf(EXPR, ...);
+#define dprintf(str, ...);
 #endif
 
 // helper function to round an integer up to the next power of 2
