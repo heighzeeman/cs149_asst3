@@ -79,6 +79,7 @@ void exclusive_scan(int* input, int N, int* result)
         int two_dplus1 = 2*two_d;
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
 		upsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
+		cudaDeviceSynchronize();
     }
 
     // downsweep phase
@@ -86,6 +87,7 @@ void exclusive_scan(int* input, int N, int* result)
         int two_dplus1 = 2*two_d;
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
 		downsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
+		cudaDeviceSynchronize();
     }
 }
 
