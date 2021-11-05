@@ -13,13 +13,24 @@
 #include "CycleTimer.h"
 
 #define THREADS_PER_BLOCK 256
-#define MAX_BLOCKS_X 8192
 
 #define _DEBUGGING
 #ifdef _DEBUGGING
-#define dprintf(str, ...); printf(str, __VA_ARGS__);
+#define dprintf(str, ...) printf(str, __VA_ARGS__)
+#define c_e(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr, "CUDA Error: %s at %s:%d\n", 
+        cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 #else
 #define dprintf(str, ...);
+#define c_e(ans) ans
 #endif
 
 // helper function to round an integer up to the next power of 2
@@ -53,7 +64,7 @@ static inline int nextPow2(int n) {
 // places it in result
 __global__ void upsweep(int two_d, int N, int* output) {
 	int two_dplus1 = two_d * 2;
-	int i = (blockIdx.x * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x) * two_dplus1;
+	int i = (blockIdx.x * blockDim.x + threadIdx.x) * two_dplus1;
 	if (i + two_dplus1 <= N) {
 		if (i + two_dplus1 == N || i + two_dplus1 == 0 || i + two_dplus1 == N/2) {
 			dprintf("Thread id = %d, two_d = %d, output[%d] = output[%d]\n", i / two_dplus1, two_d, i + two_dplus1 - 1, i + two_d - 1);
@@ -64,7 +75,7 @@ __global__ void upsweep(int two_d, int N, int* output) {
 
 __global__ void downsweep(int two_d, int N, int* output) {
 	int two_dplus1 = two_d * 2;
-	int i = (blockIdx.x * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x) * two_dplus1;
+	int i = (blockIdx.x * blockDim.x + threadIdx.x) * two_dplus1;
 	if (i + two_dplus1 <= N) {
 		if (i + two_dplus1 == N || i + two_dplus1 == 0 || i + two_dplus1 == N/2) {
 			dprintf("Thread id = %d, two_d = %d, output[%d] = output[%d]\n", i / two_dplus1, two_d, i + two_d - 1, i + two_dplus1 - 1);
@@ -90,10 +101,8 @@ void exclusive_scan(int* input, int N, int* result)
 	N = nextPow2(N);
 	for (int two_d = 1; two_d <= N/2; two_d*=2) {
 		int two_dplus1 = 2 * two_d;
-		int nblocks = ((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK;
-		
-		dim3 num_blocks(nblocks % MAX_BLOCKS_X, nblocks / MAX_BLOCKS_X + 1);
-		dprintf("Upsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x * num_blocks.y, N);
+		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
+		dprintf("Upsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		upsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
 		//cudaDeviceSynchronize();
     }
@@ -104,7 +113,7 @@ void exclusive_scan(int* input, int N, int* result)
     for (int two_d = N/2; two_d >= 1; two_d /= 2) {
 		int two_dplus1 = 2 * two_d;
 		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
-		dprintf("Downsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x * num_blocks.y, N);
+		dprintf("Downsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
 		downsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
 		//cudaDeviceSynchronize();
     }
@@ -151,7 +160,7 @@ double cudaScan(int* inarray, int* end, int* resultarray)
     exclusive_scan(device_input, N, device_result);
 
     // Wait for completion
-    cudaDeviceSynchronize();
+    c_e(cudaDeviceSynchronize());
     double endTime = CycleTimer::currentSeconds();
        
     cudaMemcpy(resultarray, device_result, (end - inarray) * sizeof(int), cudaMemcpyDeviceToHost);
