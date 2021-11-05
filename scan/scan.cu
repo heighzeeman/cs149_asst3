@@ -16,7 +16,7 @@
 
 #define _DEBUGGING
 #ifdef _DEBUGGING
-#define dprintf(str, ...); printf(#str, ##__VA_ARGS__);
+#define dprintf(str, ...); printf(str, __VA_ARGS__);
 #else
 #define dprintf(str, ...);
 #endif
