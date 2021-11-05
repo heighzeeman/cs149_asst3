@@ -103,9 +103,10 @@ void exclusive_scan(int* input, int N, int* result)
 	N = nextPow2(N);
 	for (int two_d = 1; two_d <= N/2; two_d*=2) {
 		int two_dplus1 = 2 * two_d;
-		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
+		int threads_per_block = (N / two_dplus1 < THREADS_PER_BLOCK) ? N / two_dplus1 : THREADS_PER_BLOCK;
+		dim3 num_blocks(((N / two_dplus1) + threads_per_block - 1)/threads_per_block);
 		dprintf("Upsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
-		upsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
+		upsweep<<<num_blocks, threads_per_block>>>(two_d, N, result);
 		c_e(cudaDeviceSynchronize());
     }
 	
@@ -114,9 +115,10 @@ void exclusive_scan(int* input, int N, int* result)
     // downsweep phase
     for (int two_d = N/2; two_d >= 1; two_d /= 2) {
 		int two_dplus1 = 2 * two_d;
-		dim3 num_blocks(((N / two_dplus1) + THREADS_PER_BLOCK - 1)/THREADS_PER_BLOCK);
+		int threads_per_block = (N / two_dplus1 < THREADS_PER_BLOCK) ? N / two_dplus1 : THREADS_PER_BLOCK;
+		dim3 num_blocks(((N / two_dplus1) + threads_per_block - 1)/threads_per_block);
 		dprintf("Downsweep on two_d = %d: num_blocks = %d, N = %d\n", two_d, num_blocks.x, N);
-		downsweep<<<num_blocks, THREADS_PER_BLOCK>>>(two_d, N, result);
+		downsweep<<<num_blocks, threads_per_block>>>(two_d, N, result);
 		//cudaDeviceSynchronize();
     }
 }
