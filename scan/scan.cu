@@ -144,16 +144,16 @@ double cudaScan(int* inarray, int* end, int* resultarray)
 
     int rounded_length = nextPow2(end - inarray);
     
-    cudaMalloc((void **)&device_result, sizeof(int) * rounded_length);
-    cudaMalloc((void **)&device_input, sizeof(int) * rounded_length);
+    c_e(cudaMalloc((void **)&device_result, sizeof(int) * rounded_length));
+    c_e(cudaMalloc((void **)&device_input, sizeof(int) * rounded_length));
 
     // For convenience, both the input and output vectors on the
     // device are initialized to the input values. This means that
     // students are free to implement an in-place scan on the result
     // vector if desired.  If you do this, you will need to keep this
     // in mind when calling exclusive_scan from find_repeats.
-    cudaMemcpy(device_input, inarray, (end - inarray) * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(device_result, inarray, (end - inarray) * sizeof(int), cudaMemcpyHostToDevice);
+    c_e(cudaMemcpy(device_input, inarray, (end - inarray) * sizeof(int), cudaMemcpyHostToDevice));
+    c_e(cudaMemcpy(device_result, inarray, (end - inarray) * sizeof(int), cudaMemcpyHostToDevice));
 
     double startTime = CycleTimer::currentSeconds();
 
@@ -163,7 +163,7 @@ double cudaScan(int* inarray, int* end, int* resultarray)
     c_e(cudaDeviceSynchronize());
     double endTime = CycleTimer::currentSeconds();
        
-    cudaMemcpy(resultarray, device_result, (end - inarray) * sizeof(int), cudaMemcpyDeviceToHost);
+    c_e(cudaMemcpy(resultarray, device_result, (end - inarray) * sizeof(int), cudaMemcpyDeviceToHost));
 
     double overallDuration = endTime - startTime;
     return overallDuration; 
