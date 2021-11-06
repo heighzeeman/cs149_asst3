@@ -418,16 +418,16 @@ __global__ void kernelRenderCircles() {
 	
     // compute the bounding box of the current block. The bound is in integer
     // screen coordinates, so it's clamped to the edges of the screen.
-	short imageWidth = cuConstRendererParams.imageWidth;
-	short imageHeight = cuConstRendererParams.imageHeight;
+	int imageWidth = cuConstRendererParams.imageWidth;
+	int imageHeight = cuConstRendererParams.imageHeight;
 	
-	short minX = blockIdx.x * blockDim.x;
+	int minX = blockIdx.x * blockDim.x;
 	minX = (minX > 0) ? ((minX < imageWidth) ? minX : imageWidth) : 0;
-	short maxX = minX + blockDim.x;
+	int maxX = minX + blockDim.x;
 	maxX = (maxX > 0) ? ((maxX < imageWidth) ? maxX : imageWidth) : 0;
-    short minY = blockIdx.y * blockDim.y;
+    int minY = blockIdx.y * blockDim.y;
 	minY = (minY > 0) ? ((minY < imageHeight) ? minY : imageHeight) : 0;
-    short maxY = minY + blockDim.y;
+    int maxY = minY + blockDim.y;
     maxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
 	
 	float boxL = static_cast<float>(minX) / imageWidth;
@@ -480,7 +480,7 @@ __global__ void kernelRenderCircles() {
 		
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
-		//if (minY <= pY && pY <= maxY && minX <= pX && pX <= maxX) {
+		if (minY <= pY && pY < maxY && minX <= pX && pX < maxX) {
 			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + pX)]);
 			float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
 			for (unsigned j = 0; j < num_circ_intersect; ++j) {
@@ -488,7 +488,7 @@ __global__ void kernelRenderCircles() {
 				float3 circ = *(float3*)(&cuConstRendererParams.position[circ_idx * 3]);
 				shadePixel(circ_idx, pixelCenterNorm, circ, imgPtr);
 			}
-		//}
+		}
 		__syncthreads();
 	}
 	/*
