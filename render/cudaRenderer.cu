@@ -418,7 +418,7 @@ __global__ void kernelRenderCircles() {
     // compute the bounding box of the current block. The bound is in integer
     // screen coordinates, so it's clamped to the edges of the screen.
 	int imageWidth = cuConstRendererParams.imageWidth;
-	int = cuConstRendererParams.imageHeight;
+	int imageHeight = cuConstRendererParams.imageHeight;
 	
 	unsigned short minX = blockIdx.x * blockDim.x;
 	if (minX >= imageWidth) minX = imageWidth;
