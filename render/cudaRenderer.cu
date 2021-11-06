@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <vector>
 
-#define CUDA_LAUNCH_BLOCKING 1
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <driver_functions.h>
@@ -432,10 +430,10 @@ __global__ void kernelRenderCircles() {
     int maxY = minY + blockDim.y;
     maxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
 	
-	float boxL = static_cast<float>(minX) / imageWidth;
-	float boxR = static_cast<float>(maxX) / imageWidth;
-	float boxT = static_cast<float>(maxY) / imageHeight;
-	float boxB = static_cast<float>(minY) / imageHeight;
+	float boxL = static_cast<float>(minX-2) / imageWidth;
+	float boxR = static_cast<float>(maxX+2) / imageWidth;
+	float boxT = static_cast<float>(maxY+2) / imageHeight;
+	float boxB = static_cast<float>(minY-2) / imageHeight;
 	
 	#ifdef _DEBUGGING
 	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
