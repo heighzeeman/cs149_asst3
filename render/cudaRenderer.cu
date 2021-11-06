@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <vector>
 
+#define CUDA_LAUNCH_BLOCKING 1
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <driver_functions.h>
