@@ -435,8 +435,10 @@ __global__ void kernelRenderCircles() {
 	float boxT = static_cast<float>(maxY) / imageHeight;
 	float boxB = static_cast<float>(minY) / imageHeight;
 	
-	//if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
-	//																				imageWidth, imageHeight, minX, maxX, minY, maxY);
+	#ifdef _DEBUGGING
+	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
+																					imageWidth, imageHeight, minX, maxX, minY, maxY);
+	#endif
 	
 	unsigned numCircles = cuConstRendererParams.numCircles;
 	unsigned iters = numCircles / BLOCKSIZE + (numCircles % BLOCKSIZE != 0);
@@ -447,13 +449,15 @@ __global__ void kernelRenderCircles() {
 			float3 p = *(float3*)(&cuConstRendererParams.position[circ_idx]);
 			float rad = cuConstRendererParams.radius[circle];
 			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB);
-			//printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circle, rad, p.x, p.y);
-			/*if (index == 0) {
+			#ifdef _DEBUGGING
+			printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circle, rad, p.x, p.y);
+			if (index == 0) {
 				printf("FLAG = \n[");
 				for (int k = 0; k < BLOCKSIZE; ++k) printf("%d ", circleFlag[k]);
 				printf("]\n");
 				printf("Block (%d, %d) idx %d : boxL = %f, boxR = %f, boxT = %f, boxB = %f\n", blockIdx.x, blockIdx.y, index, boxL, boxR, boxT, boxB);
-			}*/
+			}
+			#endif
 		} else {
 			circleFlag[index] = 0;
 		}
@@ -461,22 +465,26 @@ __global__ void kernelRenderCircles() {
 		sharedMemExclusiveScan(index, circleFlag, circleScan, circleScratch, BLOCKSIZE);
 		__syncthreads();
 		unsigned num_circ_intersect = circleScan[BLOCKSIZE - 1];
-		/*if (index == 0) {
+		#ifdef _DEBUGGING
+		if (index == 0) {
 			printf("SCAN = \n[");
 			for (int k = 0; k < BLOCKSIZE; ++k) printf("%d ", circleScan[k]);
 			printf("]\n");
 			printf("Block (%d, %d) idx %d : intersects = %d\n", blockIdx.x, blockIdx.y, index, num_circ_intersect);
-		}*/
+		}
+		#endif
 		if (circleFlag[index] == 1) {
 			circleScratch[circleScan[index]] = circle;
 		}
 		__syncthreads();
-		/*if (index == 0) {
+		#ifdef _DEBUGGING
+		if (index == 0) {
 			printf("SCRATCH = \n[");
 			for (int k = 0; k < BLOCKSIZE; ++k) printf("%d ", circleScratch[k]);
 			printf("]\n");
 			//printf("Block (%d, %d) idx %d : boxL = %f, boxR = %f, boxT = %f, boxB = %f\n", blockIdx.x, blockIdx.y, index, boxL, boxR, boxT, boxB);
-		}*/
+		}
+		#endif
 		
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
