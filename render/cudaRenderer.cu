@@ -429,7 +429,12 @@ __global__ void kernelRenderCircles() {
 			float rad = cuConstRendererParams.radius[circle];
 			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB);
 			printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circle, rad, p.x, p.y);
-			printf("Block (%d, %d) idx %d : boxL = %f, boxR = %f, boxT = %f, boxB = %f\n", blockIdx.x, blockIdx.y, index, boxL, boxR, boxT, boxB);
+			if (index == 0) {
+				printf("FLAG = \n[");
+				for (int k = 0; k < BLOCKSIZE; ++k) printf("%d ", circleFlag[k]);
+				printf("]\n");
+				printf("Block (%d, %d) idx %d : boxL = %f, boxR = %f, boxT = %f, boxB = %f\n", blockIdx.x, blockIdx.y, index, boxL, boxR, boxT, boxB);
+			}
 		} else {
 			circleFlag[index] = 0;
 		}
