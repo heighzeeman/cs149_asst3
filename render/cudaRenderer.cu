@@ -20,7 +20,7 @@
 #include "exclusiveScan.cu_inl"
 #include "circleBoxTest.cu_inl"
 
-#define _DEBUGGING
+//#define _DEBUGGING
 #ifdef _DEBUGGING
 #define dprintf(str, ...) printf(str, __VA_ARGS__)
 #define c_e(ans) { cudaAssert((ans), __FILE__, __LINE__); }
@@ -448,7 +448,7 @@ __global__ void kernelRenderCircles() {
 			unsigned circ_idx = 3 * circle;
 			float3 p = *(float3*)(&cuConstRendererParams.position[circ_idx]);
 			float rad = cuConstRendererParams.radius[circle];
-			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB);
+			circleFlag[index] = circleInBox(p.x, p.y, rad, boxL, boxR, boxT, boxB);
 			#ifdef _DEBUGGING
 			printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circle, rad, p.x, p.y);
 			if (index == 0) {
