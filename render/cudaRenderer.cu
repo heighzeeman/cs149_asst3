@@ -486,7 +486,7 @@ __global__ void kernelRenderCircles() {
 		
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
-		//if (pY < maxY && pX < maxX) {
+		if (pY < maxY && pX < maxX) {
 			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + pX)]);
 			float4 newColor = *imgPtr;
 			for (unsigned j = 0; j < num_circ_intersect; ++j) {
@@ -532,7 +532,7 @@ __global__ void kernelRenderCircles() {
 			
 			// global memory write
 			*imgPtr = newColor;
-		//}
+		}
 	}
 }
 
