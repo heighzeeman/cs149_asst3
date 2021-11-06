@@ -20,6 +20,25 @@
 #include "exclusiveScan.cu_inl"
 #include "circleBoxTest.cu_inl"
 
+#define _DEBUGGING
+#ifdef _DEBUGGING
+#define dprintf(str, ...) printf(str, __VA_ARGS__)
+#define c_e(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr, "CUDA Error: %s at %s:%d\n", 
+        cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+#else
+#define dprintf(str, ...);
+#define c_e(ans) ans
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // Putting all the cuda kernels here
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -461,7 +480,7 @@ __global__ void kernelRenderCircles() {
 		
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
-		if (0 <= pY && pY < imageHeight && 0 <= pX && pX < imageWidth) {
+		if (minY <= pY && pY <= maxY && minX <= pX && pX <= maxX) {
 			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + pX)]);
 			float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
 			for (unsigned j = 0; j < num_circ_intersect; ++j) {
@@ -732,5 +751,5 @@ CudaRenderer::render() {
     dim3 gridDim((image->width + blockDim.x - 1) / blockDim.x, (image->height + blockDim.y - 1) / blockDim.y);
 
     kernelRenderCircles<<<gridDim, blockDim>>>();
-    cudaDeviceSynchronize();
+    c_e(cudaDeviceSynchronize());
 }
