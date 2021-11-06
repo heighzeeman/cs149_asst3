@@ -458,14 +458,17 @@ __global__ void kernelRenderCircles() {
 			printf("]\n");
 			//printf("Block (%d, %d) idx %d : boxL = %f, boxR = %f, boxT = %f, boxB = %f\n", blockIdx.x, blockIdx.y, index, boxL, boxR, boxT, boxB);
 		}
-		short pX = minX + threadIdx.x;
-		short pY = minY + threadIdx.y;
-		float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + minX)]);
-		float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
-		for (unsigned j = 0; j < num_circ_intersect; ++j) {
-			int circ_idx = circleScratch[j];
-			float3 circ = *(float3*)(&cuConstRendererParams.position[circ_idx * 3]);
-			shadePixel(circ_idx, pixelCenterNorm, circ, imgPtr);
+		
+		int pX = minX + threadIdx.x;
+		int pY = minY + threadIdx.y;
+		if (0 <= pY && pY < imageHeight && 0 <= pX && pX < imageWidth) {
+			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + minX)]);
+			float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
+			for (unsigned j = 0; j < num_circ_intersect; ++j) {
+				int circ_idx = circleScratch[j];
+				float3 circ = *(float3*)(&cuConstRendererParams.position[circ_idx * 3]);
+				shadePixel(circ_idx, pixelCenterNorm, circ, imgPtr);
+			}
 		}
 		__syncthreads();
 	}
