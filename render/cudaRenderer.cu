@@ -413,8 +413,8 @@ __global__ void kernelRenderCircles() {
 	
 	float boxL = static_cast<float>(minX) / imageWidth;
 	float boxR = static_cast<float>(maxX) / imageWidth;
-	float boxT = static_cast<float>(minY) / imageHeight;
-	float boxB = static_cast<float>(maxY) / imageHeight;
+	float boxT = static_cast<float>(maxY) / imageHeight;
+	float boxB = static_cast<float>(minY) / imageHeight;
 	
 	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
 																					imageWidth, imageHeight, minX, maxX, minY, maxY);
