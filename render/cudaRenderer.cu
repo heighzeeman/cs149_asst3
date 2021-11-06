@@ -416,6 +416,9 @@ __global__ void kernelRenderCircles() {
 	float boxT = minY / imageHeight;
 	float boxB = maxY / imageHeight;
 	
+	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
+																					imageWidth, imageHeight, minX, maxX, minY, maxY);
+	
 	int numCircles = cuConstRendererParams.numCircles;
 	int iters = numCircles / BLOCKSIZE + (numCircles % BLOCKSIZE != 0);
 	for (int i = 0; i < iters; ++i) {
@@ -425,6 +428,7 @@ __global__ void kernelRenderCircles() {
 			float3 p = *(float3*)(&cuConstRendererParams.position[circ_idx]);
 			float rad = cuConstRendererParams.radius[circle];
 			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB) ? 1 : 0;
+			if (index == 0) printf("Block (%d, %d): circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, circ_idx, rad, p.x, p.y);
 		} else {
 			circleFlag[index] = 0;
 		}
@@ -432,6 +436,7 @@ __global__ void kernelRenderCircles() {
 		sharedMemExclusiveScan(index, circleFlag, circleScan, circleScratch, BLOCKSIZE);
 		__syncthreads();
 		unsigned num_circ_intersect = circleScan[BLOCKSIZE - 1];
+		if (index == 0) printf("Block (%d, %d): intersects = %d\n", blockIdx.x, blockIdx.y, num_circ_intersect);
 		if (circleFlag[index] == 1) {
 			circleScratch[circleScan[index]] = circle;
 		}
