@@ -411,10 +411,10 @@ __global__ void kernelRenderCircles() {
     short maxY = minY + blockDim.y - 1;
     maxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
 	
-	float boxL = minX / imageWidth;
-	float boxR = maxX / imageWidth;
-	float boxT = minY / imageHeight;
-	float boxB = maxY / imageHeight;
+	float boxL = static_cast<float>(minX) / imageWidth;
+	float boxR = static_cast<float>(maxX) / imageWidth;
+	float boxT = static_cast<float>(minY) / imageHeight;
+	float boxB = static_cast<float>(maxY) / imageHeight;
 	
 	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
 																					imageWidth, imageHeight, minX, maxX, minY, maxY);
@@ -427,8 +427,8 @@ __global__ void kernelRenderCircles() {
 			int circ_idx = 3 * circle;
 			float3 p = *(float3*)(&cuConstRendererParams.position[circ_idx]);
 			float rad = cuConstRendererParams.radius[circle];
-			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB) ? 1 : 0;
-			printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circ_idx, rad, p.x, p.y);
+			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB);
+			printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circle, rad, p.x, p.y);
 		} else {
 			circleFlag[index] = 0;
 		}
@@ -437,11 +437,11 @@ __global__ void kernelRenderCircles() {
 		__syncthreads();
 		unsigned num_circ_intersect = circleScan[BLOCKSIZE - 1];
 		if (index == 0) {
-			printf("[");
+			printf("SCAN = \n[");
 			for (int k = 0; k < BLOCKSIZE; ++k) printf("%d ", circleScan[k]);
 			printf("]\n");
+			printf("Block (%d, %d) idx %d : intersects = %d\n", blockIdx.x, blockIdx.y, index, num_circ_intersect);
 		}
-		printf("Block (%d, %d) idx %d : intersects = %d\n", blockIdx.x, blockIdx.y, index, num_circ_intersect);
 		if (circleFlag[index] == 1) {
 			circleScratch[circleScan[index]] = circle;
 		}
