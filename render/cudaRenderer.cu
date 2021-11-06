@@ -349,7 +349,7 @@ shadePixel(int circleIndex, float2 pixelCenter, float3 p, float4* imagePtr) {
     float diffY = p.y - pixelCenter.y;
     float pixelDist = diffX * diffX + diffY * diffY;
 
-    float rad = cuConstRendererParams.radius[circleIndex];
+    float rad = cuConstRendererParams.radius[circleIndex];;
     float maxDist = rad * rad;
 
     // circle does not contribute to the image
@@ -438,12 +438,12 @@ __global__ void kernelRenderCircles() {
 	//if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
 	//																				imageWidth, imageHeight, minX, maxX, minY, maxY);
 	
-	int numCircles = cuConstRendererParams.numCircles;
-	int iters = numCircles / BLOCKSIZE + (numCircles % BLOCKSIZE != 0);
+	unsigned numCircles = cuConstRendererParams.numCircles;
+	unsigned iters = numCircles / BLOCKSIZE + (numCircles % BLOCKSIZE != 0);
 	for (int i = 0; i < iters; ++i) {
-		int circle = i * BLOCKSIZE + index;
+		unsigned circle = i * BLOCKSIZE + index;
 		if (circle < numCircles) {
-			int circ_idx = 3 * circle;
+			unsigned circ_idx = 3 * circle;
 			float3 p = *(float3*)(&cuConstRendererParams.position[circ_idx]);
 			float rad = cuConstRendererParams.radius[circle];
 			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB);
@@ -742,6 +742,7 @@ CudaRenderer::advanceAnimation() {
     }
     cudaDeviceSynchronize();
 }
+
 
 void
 CudaRenderer::render() {
