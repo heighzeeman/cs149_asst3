@@ -417,7 +417,7 @@ __global__ void kernelRenderCircles() {
 	float boxB = static_cast<float>(minY) / imageHeight;
 	
 	//if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
-																					imageWidth, imageHeight, minX, maxX, minY, maxY);
+	//																				imageWidth, imageHeight, minX, maxX, minY, maxY);
 	
 	int numCircles = cuConstRendererParams.numCircles;
 	int iters = numCircles / BLOCKSIZE + (numCircles % BLOCKSIZE != 0);
