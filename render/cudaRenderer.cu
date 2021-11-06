@@ -425,9 +425,6 @@ __global__ void kernelRenderCircles() {
 	__shared__ float boxT;
 	__shared__ float boxB;
 	__shared__ unsigned short minX;
-	__shared__ unsigned short maxX;
-	__shared__ unsigned short minY;
-	__shared__ unsigned short maxY;
 	if (index == 0) {
 		minX = blockIdx.x * blockDim.x;
 		if (minX >= imageWidth) minX = imageWidth;
