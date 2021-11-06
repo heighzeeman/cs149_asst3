@@ -417,22 +417,40 @@ __global__ void kernelRenderCircles() {
 	
     // compute the bounding box of the current block. The bound is in integer
     // screen coordinates, so it's clamped to the edges of the screen.
-	int imageWidth = cuConstRendererParams.imageWidth;
-	int imageHeight = cuConstRendererParams.imageHeight;
+	__shared__ int imageWidth;
+	imageWidth = cuConstRendererParams.imageWidth;
+	__shared__ int imageHeight;
+	imageHeight = cuConstRendererParams.imageHeight;
 	
-	int minX = blockIdx.x * blockDim.x;
-	minX = (minX > 0) ? ((minX < imageWidth) ? minX : imageWidth) : 0;
-	int maxX = minX + blockDim.x;
-	maxX = (maxX > 0) ? ((maxX < imageWidth) ? maxX : imageWidth) : 0;
-    int minY = blockIdx.y * blockDim.y;
-	minY = (minY > 0) ? ((minY < imageHeight) ? minY : imageHeight) : 0;
-    int maxY = minY + blockDim.y;
-    maxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
-	
-	float boxL = static_cast<float>(minX) / imageWidth;
-	float boxR = static_cast<float>(maxX) / imageWidth;
-	float boxT = static_cast<float>(maxY) / imageHeight;
-	float boxB = static_cast<float>(minY) / imageHeight;
+	__shared__ float boxL;
+	__shared__ float boxR;
+	__shared__ float boxT;
+	__shared__ float boxB;
+	__shared__ unsigned short minX;
+	if (index == 0) {
+		minX = blockIdx.x * blockDim.x;
+		if (minX >= imageWidth) minX = imageWidth;
+		boxL = static_cast<float>(minX) / imageWidth;
+	}
+	__shared__ unsigned short maxX;
+	if (index == 1) {
+		maxX = blockIdx.x * blockDim.x + blockDim.x;
+		if (maxX >= imageWidth) maxX = imageWidth;
+		boxR = static_cast<float>(maxX) / imageWidth;
+	}
+    __shared__ unsigned short minY;
+	if (index == 2) {
+		minY = blockIdx.y * blockDim.y;
+		if (minY >= imageHeight) maxX = imageHeight;
+		boxB = static_cast<float>(minY) / imageHeight;
+	}
+    __shared__ unsigned short maxY;
+	if (index == 3) {
+		maxY = blockIdx.y * blockDim.y + blockDim.y;
+		if (maxY >= imageHeight) maxX = imageHeight;
+		boxT = static_cast<float>(maxY) / imageHeight;
+	}
+	__syncthreads();
 	
 	#ifdef _DEBUGGING
 	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
@@ -462,7 +480,7 @@ __global__ void kernelRenderCircles() {
 		}
 		__syncthreads();
 		sharedMemExclusiveScan(index, circleFlag, circleScan, circleScratch, BLOCKSIZE);
-		__syncthreads();
+		//__syncthreads();
 		unsigned num_circ_intersect = circleScan[BLOCKSIZE - 1] + circleFlag[BLOCKSIZE - 1];
 		#ifdef _DEBUGGING
 		if (index == 0) {
