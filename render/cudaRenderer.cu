@@ -480,7 +480,7 @@ __global__ void kernelRenderCircles() {
 		
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
-		if (minY <= pY && pY <= maxY && minX <= pX && pX <= maxX) {
+		//if (minY <= pY && pY <= maxY && minX <= pX && pX <= maxX) {
 			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + pX)]);
 			float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
 			for (unsigned j = 0; j < num_circ_intersect; ++j) {
@@ -488,7 +488,7 @@ __global__ void kernelRenderCircles() {
 				float3 circ = *(float3*)(&cuConstRendererParams.position[circ_idx * 3]);
 				shadePixel(circ_idx, pixelCenterNorm, circ, imgPtr);
 			}
-		}
+		//}
 		__syncthreads();
 	}
 	/*
