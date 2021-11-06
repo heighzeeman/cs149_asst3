@@ -462,7 +462,7 @@ __global__ void kernelRenderCircles() {
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
 		if (0 <= pY && pY < imageHeight && 0 <= pX && pX < imageWidth) {
-			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + minX)]);
+			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + pX)]);
 			float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
 			for (unsigned j = 0; j < num_circ_intersect; ++j) {
 				int circ_idx = circleScratch[j];
