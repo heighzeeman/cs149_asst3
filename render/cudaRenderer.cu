@@ -430,10 +430,10 @@ __global__ void kernelRenderCircles() {
     int maxY = minY + blockDim.y;
     maxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
 	
-	float boxL = static_cast<float>(minX-2) / imageWidth;
-	float boxR = static_cast<float>(maxX+2) / imageWidth;
-	float boxT = static_cast<float>(maxY+2) / imageHeight;
-	float boxB = static_cast<float>(minY-2) / imageHeight;
+	float boxL = static_cast<float>(minX) / imageWidth;
+	float boxR = static_cast<float>(maxX) / imageWidth;
+	float boxT = static_cast<float>(maxY) / imageHeight;
+	float boxB = static_cast<float>(minY) / imageHeight;
 	
 	#ifdef _DEBUGGING
 	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
@@ -464,7 +464,7 @@ __global__ void kernelRenderCircles() {
 		__syncthreads();
 		sharedMemExclusiveScan(index, circleFlag, circleScan, circleScratch, BLOCKSIZE);
 		__syncthreads();
-		unsigned num_circ_intersect = circleScan[BLOCKSIZE - 1];
+		unsigned num_circ_intersect = circleScan[BLOCKSIZE - 1] + circleFlag[BLOCKSIZE - 1];
 		#ifdef _DEBUGGING
 		if (index == 0) {
 			printf("SCAN = \n[");
