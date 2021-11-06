@@ -488,16 +488,53 @@ __global__ void kernelRenderCircles() {
 		
 		int pX = minX + threadIdx.x;
 		int pY = minY + threadIdx.y;
-		if (minY <= pY && pY < maxY && minX <= pX && pX < maxX) {
+		if (pY < maxY && pX < maxX) {
 			float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + pX)]);
-			float2 pixelCenterNorm = make_float2((static_cast<float>(pX) + 0.5f) / imageWidth, (static_cast<float>(pY) + 0.5f) / imageHeight);
+			float4 existingColor = *imgPtr;
 			for (unsigned j = 0; j < num_circ_intersect; ++j) {
 				int circ_idx = circleScratch[j];
 				float3 circ = *(float3*)(&cuConstRendererParams.position[circ_idx * 3]);
-				shadePixel(circ_idx, pixelCenterNorm, circ, imgPtr);
+				float diffX = circ.x - (static_cast<float>(pX) + 0.5f) / imageWidth;
+				float diffY = circ.y - (static_cast<float>(pY) + 0.5f) / imageHeight;
+				float pixelDist = diffX * diffX + diffY * diffY;
+				float rad = cuConstRendererParams.radius[circ_idx];
+				float maxDist = rad * rad;
+				// circle does not contribute to the image
+				if (pixelDist > maxDist) continue;
+
+				float3 rgb;
+				float alpha;
+				
+				if (cuConstRendererParams.sceneName == SNOWFLAKES || cuConstRendererParams.sceneName == SNOWFLAKES_SINGLE_FRAME) {
+
+					const float kCircleMaxAlpha = .5f;
+					const float falloffScale = 4.f;
+
+					float normPixelDist = sqrt(pixelDist) / rad;
+					rgb = lookupColor(normPixelDist);
+
+					float maxAlpha = .6f + .4f * (1.f-circ.z);
+					maxAlpha = kCircleMaxAlpha * fmaxf(fminf(maxAlpha, 1.f), 0.f); // kCircleMaxAlpha * clamped value
+					alpha = maxAlpha * exp(-1.f * falloffScale * normPixelDist * normPixelDist);
+
+				} else {
+					// simple: each circle has an assigned color
+					rgb = *(float3*)&(cuConstRendererParams.color[3 * circ_idx]);
+					alpha = .5f;
+				}
+
+				float oneMinusAlpha = 1.f - alpha;
+
+				existingColor.x = alpha * rgb.x + oneMinusAlpha * existingColor.x;
+				existingColor.y = alpha * rgb.y + oneMinusAlpha * existingColor.y;
+				existingColor.z = alpha * rgb.z + oneMinusAlpha * existingColor.z;
+				existingColor.w += alpha;
+
 			}
+			
+			// global memory write
+			*imgPtr = existingColor;
 		}
-		__syncthreads();
 	}
 	/*
 	
