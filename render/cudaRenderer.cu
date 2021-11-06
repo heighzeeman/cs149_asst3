@@ -423,11 +423,11 @@ __global__ void kernelRenderCircles() {
 	
 	short minX = blockIdx.x * blockDim.x;
 	minX = (minX > 0) ? ((minX < imageWidth) ? minX : imageWidth) : 0;
-	short maxX = minX + blockDim.x - 1;
+	short maxX = minX + blockDim.x;
 	maxX = (maxX > 0) ? ((maxX < imageWidth) ? maxX : imageWidth) : 0;
     short minY = blockIdx.y * blockDim.y;
 	minY = (minY > 0) ? ((minY < imageHeight) ? minY : imageHeight) : 0;
-    short maxY = minY + blockDim.y - 1;
+    short maxY = minY + blockDim.y;
     maxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
 	
 	float boxL = static_cast<float>(minX) / imageWidth;
