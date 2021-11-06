@@ -452,6 +452,12 @@ __global__ void kernelRenderCircles() {
 			circleScratch[circleScan[index]] = circle;
 		}
 		__syncthreads();
+		if (index == 0) {
+			printf("SCRATCH = \n[");
+			for (int k = 0; k < BLOCKSIZE; ++k) printf("%d ", circleScratch[k]);
+			printf("]\n");
+			//printf("Block (%d, %d) idx %d : boxL = %f, boxR = %f, boxT = %f, boxB = %f\n", blockIdx.x, blockIdx.y, index, boxL, boxR, boxT, boxB);
+		}
 		short pX = minX + threadIdx.x;
 		short pY = minY + threadIdx.y;
 		float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pY * imageWidth + minX)]);
