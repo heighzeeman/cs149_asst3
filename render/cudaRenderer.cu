@@ -417,41 +417,25 @@ __global__ void kernelRenderCircles() {
 	
     // compute the bounding box of the current block. The bound is in integer
     // screen coordinates, so it's clamped to the edges of the screen.
-	__shared__ int imageWidth;
-	imageWidth = cuConstRendererParams.imageWidth;
-	__shared__ int imageHeight;
-	imageHeight = cuConstRendererParams.imageHeight;
+	int imageWidth = cuConstRendererParams.imageWidth;
+	int = cuConstRendererParams.imageHeight;
 	
-	__shared__ float boxL;
-	__shared__ float boxR;
-	__shared__ float boxT;
-	__shared__ float boxB;
+	unsigned short minX = blockIdx.x * blockDim.x;
+	if (minX >= imageWidth) minX = imageWidth;
+	float boxL = static_cast<float>(minX) / imageWidth;
+
+	unsigned short maxX = blockIdx.x * blockDim.x + blockDim.x;
+	if (maxX >= imageWidth) maxX = imageWidth;
+	float boxR = static_cast<float>(maxX) / imageWidth;
+
+	unsigned short minY = blockIdx.y * blockDim.y;
+	if (minY >= imageHeight) maxX = imageHeight;
+	float boxB = static_cast<float>(minY) / imageHeight;
 	
-	__shared__ unsigned short minX;
-	if (index == 0) {
-		minX = blockIdx.x * blockDim.x;
-		if (minX >= imageWidth) minX = imageWidth;
-		boxL = static_cast<float>(minX) / imageWidth;
-	}
-	__shared__ unsigned short maxX;
-	if (index == 1) {
-		maxX = blockIdx.x * blockDim.x + blockDim.x;
-		if (maxX >= imageWidth) maxX = imageWidth;
-		boxR = static_cast<float>(maxX) / imageWidth;
-	}
-    __shared__ unsigned short minY;
-	if (index == 2) {
-		minY = blockIdx.y * blockDim.y;
-		if (minY >= imageHeight) maxX = imageHeight;
-		boxB = static_cast<float>(minY) / imageHeight;
-	}
-    __shared__ unsigned short maxY;
-	if (index == 3) {
-		maxY = blockIdx.y * blockDim.y + blockDim.y;
-		if (maxY >= imageHeight) maxX = imageHeight;
-		boxT = static_cast<float>(maxY) / imageHeight;
-	}
-	__syncthreads();
+	unsigned short maxY = blockIdx.y * blockDim.y + blockDim.y;
+	if (maxY >= imageHeight) maxX = imageHeight;
+	float boxT = static_cast<float>(maxY) / imageHeight;
+
 	
 	#ifdef _DEBUGGING
 	if (index == 0) printf("Block (%d, %d): IW = %d, IH = %d, minX = %d, maxX = %d, minY = %d, maxY = %d\n", blockIdx.x, blockIdx.y,
