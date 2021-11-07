@@ -424,7 +424,7 @@ __global__ void kernelRenderCircles() {
 	if (minX >= imageWidth) minX = imageWidth;
 	float boxL = static_cast<float>(minX) / imageWidth;
 
-	unsigned short maxX = blockIdx.x * blockDim.x + blockDim.x;
+	unsigned short maxX = minX + blockDim.x;
 	if (maxX >= imageWidth) maxX = imageWidth;
 	float boxR = static_cast<float>(maxX) / imageWidth;
 
@@ -432,7 +432,7 @@ __global__ void kernelRenderCircles() {
 	if (minY >= imageHeight) maxX = imageHeight;
 	float boxB = static_cast<float>(minY) / imageHeight;
 	
-	unsigned short maxY = blockIdx.y * blockDim.y + blockDim.y;
+	unsigned short maxY = minY + blockDim.y;
 	if (maxY >= imageHeight) maxX = imageHeight;
 	float boxT = static_cast<float>(maxY) / imageHeight;
 
@@ -448,9 +448,9 @@ __global__ void kernelRenderCircles() {
 		unsigned circle = i * BLOCKSIZE + index;
 		if (circle < numCircles) {
 			unsigned circ_idx = 3 * circle;
-			float3 p = *(float3*)(&cuConstRendererParams.position[circ_idx]);
+			float3* p = (float3*)(&cuConstRendererParams.position[circ_idx]);
 			float rad = cuConstRendererParams.radius[circle];
-			circleFlag[index] = circleInBoxConservative(p.x, p.y, rad, boxL, boxR, boxT, boxB);
+			circleFlag[index] = circleInBoxConservative(p->x, p->y, rad, boxL, boxR, boxT, boxB);
 			#ifdef _DEBUGGING
 			printf("Block (%d, %d) idx %d : circle_idx(not 3) = %d, rad = %f, p.x = %f, p.y = %f\n", blockIdx.x, blockIdx.y, index, circle, rad, p.x, p.y);
 			if (index == 0) {
@@ -499,9 +499,8 @@ __global__ void kernelRenderCircles() {
 				float diffY = circ.y - (static_cast<float>(pY) + 0.5f) / imageHeight;
 				float pixelDist = diffX * diffX + diffY * diffY;
 				float rad = cuConstRendererParams.radius[circ_idx];
-				float maxDist = rad * rad;
 				// circle does not contribute to the image
-				if (pixelDist > maxDist) continue;
+				if (pixelDist > rad * rad) continue;
 
 				float3 rgb;
 				float alpha;
